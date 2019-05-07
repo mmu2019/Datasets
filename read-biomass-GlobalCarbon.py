@@ -14,7 +14,7 @@ from scipy.interpolate import griddata
 DataDir = "/Users/mingquan/projects"
 
 remote_source = "https://science.jpl.nasa.gov/people/Saatchi"
-gist_source = "https://gist.github.com/nocollier/d73585731756fa472731065389af45dc"
+gist_source = "https://github.com/mmu2019/Datasets/blob/master/read-biomass-GlobalCarbon.py"
 local_source = DataDir + '/GlobalCarbon_0.25x0.25/maxent_agb_mean_global_v5.1_masked_latlon_0.25deg.nc'
 stamp1 = '2017-10-31'
 stamp2 = '2019-03-14'
