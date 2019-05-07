@@ -10,10 +10,13 @@ import math
 from urllib.request import urlretrieve
 from scipy.interpolate import griddata
 
+# set up Data directory
+DataDir = "/Users/mingquan/projects"
+
 # Set general information for the data source
 remote_source = "https://crudata.uea.ac.uk/cru/data/hrg/cru_ts_4.02/"
-gist_source = "https://gist.github.com/nocollier/d73585731756fa472731065389af45dc"
-local_source = 'CRU/v4.02/cru_ts4.02.1901.2017.vap.dat.nc'
+gist_source = "https://github.com/mmu2019/Datasets/blob/master/read-rhums-cru.py"
+local_source = DataDir + '/CRU/v4.02/cru_ts4.02.1901.2017.vap.dat.nc'
 stamp1 = '2019-05-06'
 
 datestr = str(datetime.datetime.now())
@@ -59,8 +62,8 @@ nlat = lat.size
 nlon = lon.size
 
 # read single netCDF file
-filename1 = 'CRU/v4.02/cru_ts4.02.1901.2017.tmp.dat.nc'
-filename2 = 'CRU/v4.02/cru_ts4.02.1901.2017.vap.dat.nc'
+filename1 = DataDir + '/CRU/v4.02/cru_ts4.02.1901.2017.tmp.dat.nc'
+filename2 = DataDir + '/CRU/v4.02/cru_ts4.02.1901.2017.vap.dat.nc'
 print(filename1)
 print(filename2)
 cru1=Dataset(filename1,'r',format='NETCDF3')
@@ -95,7 +98,7 @@ print(data.shape)
 data_min = data.min()
 data_max = data.max()
 
-with Dataset("rhums.nc", mode="w") as dset:
+with Dataset(DataDir + "/rhums.nc", mode="w") as dset:
 
     # Create netCDF dimensions
     dset.createDimension("time",size=  t.size)
