@@ -15,7 +15,7 @@ DataDir = "/Users/mingquan/projects"
 
 # Set general information for the data source
 remote_source = "https://www.geo.vu.nl/~gwerf/GFED/GFED4/"
-gist_source = "https://gist.github.com/nocollier/d73585731756fa472731065389af45dc"
+gist_source = "https://github.com/mmu2019/Datasets/blob/master/read-ba-gfed.py"
 local_source = DataDir + '/GFED4S/GFED4.1s_yyyy.hdf5'
 stamp1 = '2019-03-13'
 
