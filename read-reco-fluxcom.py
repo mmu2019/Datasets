@@ -15,8 +15,8 @@ DataDir = "/Users/mingquan/projects"
 
 # Set general information for the data source
 remote_source = "https://doi.org/doi:10.17871/FLUXCOM_RS_METEO_CRUNCEPv6_1980_2013_v1"
-gist_source = "https://github.com/mmu2019/Datasets/blob/master/read-gpp-fluxcom.py"
-local_source = DataDir + '/FluxCom/gpp/GPP.ANN.CRUNCEPv6.monthly.YYYY.nc'
+gist_source = "https://github.com/mmu2019/Datasets/blob/master/read-reco-fluxcom.py"
+local_source = DataDir + '/FluxCom/reco/TER.ANN.CRUNCEPv6.monthly.YYYY.nc'
 stamp1 = '2019-05-07'
 
 datestr = str(datetime.datetime.now())
@@ -78,14 +78,14 @@ for i in range(nyears):
     print(year)
 
     # read single netCDF file
-    filename = DataDir + '/FluxCom/gpp/GPP.ANN.CRUNCEPv6.monthly.' + str(year) + '.nc'
+    filename = DataDir + '/FluxCom/reco/TER.ANN.CRUNCEPv6.monthly.' + str(year) + '.nc'
     print(filename)
     flx=Dataset(filename,'r',format='NETCDF3')
-    data0 = flx.variables['GPP']
+    data0 = flx.variables['TER']
     lats  = flx.variables['lat']
 
     #long_name = data0.long_name
-    long_name = "gross primary production"
+    long_name = "terrestrial ecosystem respiration"
 
     #data1 = np.where(data0[:,:,:]<=-999, 0, data0[:,:,:])
 
@@ -115,7 +115,7 @@ print(data.shape)
 data_min = data.min()
 data_max = data.max()
 
-with Dataset(DataDir + "/gpp.nc", mode="w") as dset:
+with Dataset(DataDir + "/reco.nc", mode="w") as dset:
 
     # Create netCDF dimensions
     dset.createDimension("time",size=  t.size)
@@ -130,7 +130,7 @@ with Dataset(DataDir + "/gpp.nc", mode="w") as dset:
     XB = dset.createVariable("lat_bounds" ,lat.dtype ,("lat","nb" ))
     Y  = dset.createVariable("lon"        ,lon.dtype ,("lon"      ))
     YB = dset.createVariable("lon_bounds" ,lon.dtype ,("lon","nb" ))
-    D  = dset.createVariable("gpp"        ,data.dtype,("time","lat","lon"), fill_value = -999.)
+    D  = dset.createVariable("reco"        ,data.dtype,("time","lat","lon"), fill_value = -999.)
 
     print(D.shape)
 
