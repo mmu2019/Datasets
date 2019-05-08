@@ -165,7 +165,7 @@ with Dataset(DataDir + "/nee.nc", mode="w") as dset:
 %s: converted to netCDF with %s""" % (stamp1, remote_source, stamp2, stamp2, gist_source)
     dset.references  = """
 @ARTICLE{Jung2017,
-  author = {Jung,M., M. Reichstein, C.R. Schwalm, C. Huntingford, S. Sitch, A. Ahlstrom, A. Arneth, G. Camps-Valls, P. Ciais, P. Friedlingstein, F. Gans, K. Ichii, A.K. Jain, E. Kato, D. Papale, B. Poulter, B. Raduly, C. Rodenbeck, G. Tramontana, N. Viovy, Y.P. Wang, U. Weber, S. Zaehle and N. Zeng},
+  author = {Jung, M., M. Reichstein, C.R. Schwalm, C. Huntingford, S. Sitch, A. Ahlstrom, A. Arneth, G. Camps-Valls, P. Ciais, P. Friedlingstein, F. Gans, K. Ichii, A.K. Jain, E. Kato, D. Papale, B. Poulter, B. Raduly, C. Rodenbeck, G. Tramontana, N. Viovy, Y.P. Wang, U. Weber, S. Zaehle and N. Zeng},
   title = {Compensatory water effects link yearly global land CO2 sink changes to temperature},
   journal = {Nature},
   year = {2017},
