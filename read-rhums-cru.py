@@ -79,7 +79,7 @@ vap  = cru2.variables['vap']
 data1 = tas[ntot-ntim:ntot,:,:]
 data2 = vap[ntot-ntim:ntot,:,:]
     
-# estimate saturated vapor pressure by using air temperature
+# estimate saturated vapor pressure by using temperature
 Ew = 6.112*np.exp(17.62*data1[:,:,:]/(243.12+data1[:,:,:]))
 
 # estimate relative humidity by vapor pressure and saturated vapor pressure
@@ -154,7 +154,7 @@ with Dataset(DataDir + "/rhums.nc", mode="w") as dset:
     dset.source  = "monthly observations at meteorological stations across the world land areas"
     dset.history = """
 %s: downloaded source from %s;
-%s: estimate saturated vapor pressure using air temperature;
+%s: estimate saturated vapor pressure using temperature;
 %s: calculate relative humidity using saturated vapor pressure and vapor pressure;
 %s: converted to ILAMB required netCDF with %s""" % (stamp1, remote_source, stamp2, stamp2, stamp2, gist_source)
     dset.references  = """
