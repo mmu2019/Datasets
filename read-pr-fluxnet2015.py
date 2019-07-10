@@ -15,14 +15,14 @@ DataDir = "/Users/mingquan/newDATA"
 start_yr = 1991
 end_yr   = 2014
 
-VarID       = "gpp"
-RawVarID    = "GPP_DT_VUT_REF"
+VarID       = "pr"
+RawVarID    = "P_F"
 RawVarID_QC = RawVarID + "_QC"
-long_name   = "gross primary production"
+long_name   = "precipitation"
 
 # Set general information for the data source
 remote_source = "https://fluxnet.fluxdata.org/data/fluxnet2015-dataset/"
-gist_source = "https://github.com/mmu2019/Datasets/blob/master/read-gpp-fluxnet2015.py"
+gist_source = "https://github.com/mmu2019/Datasets/blob/master/read-pr-fluxnet2015.py"
 local_source = DataDir + '/FLUXNET2015/TIER1/FULLSET/MM/FLX_STATIONNAME_FLUXNET2015_FULLSET_MM_YEAR.csv'
 stamp1 = '2019-06-20'
 
@@ -37,10 +37,10 @@ instit3 = "LBA, NECC, ICOS, TCOS-Siberia, and USCCC"
 period = period = str(start_yr) + "-01 through " + str(end_yr) + "-12"
 origtr = "monthly"
 origsr = "site"
-origut = "gC/m2/d"
+origut = "mm/day"
 finltr = "monthly"
 finlsr = "site"
-finlut = "kgC/m2/s"
+finlut = "kg/m2/s"
 
 # Create temporal dimension
 nyears = end_yr - start_yr + 1
@@ -140,7 +140,7 @@ for FileName in AllFileNames:
 
     if RawVarID in datastr:
        indx    = datastr.index(RawVarID)
-       #indx_qc = datastr.index(RawVarID_QC)
+       indx_qc = datastr.index(RawVarID_QC)
     else:
        indx = -1
 
@@ -154,22 +154,20 @@ for FileName in AllFileNames:
            MM = int(YYMM - YY*100)
 
            tempdata    = float(datastr[indx])
-           #tempdata_qc = float(datastr[indx_qc])
+           tempdata_qc = float(datastr[indx_qc])
 
-           #if tempdata<=-990 or tempdata_qc<0.5 and tempdata_qc>=0:
-           if tempdata<=-990:
+           if tempdata<=-990 or tempdata_qc<0.5 and tempdata_qc>=0:
               # reset missing value
               tempdata = -999.
            else:
-              # convert unit from gC/m2/d --> KgC/m2/s for nee, gpp and reco
-              tempdata = tempdata/(1000.*3600*24.)
+              # convert unit from mm/day to kg/m2/s
+              tempdata = tempdata/(3600.*24.)
 
            # only data in the period from start_yr till end_yr are chosen.
            if YY>=start_yr and YY<=end_yr:
               iy = YY - start_yr
               im = MM - 1
               data2D[iy,im] = tempdata
-
 
     ijk = 0
     for iy in range(nyears):
@@ -187,7 +185,7 @@ data_max = data.max()
 # Calculate climatology of burned area
 mdata     = data.mean(axis=0)
 
-with Dataset(DataDir + "/gpp.nc", mode="w") as dset:
+with Dataset(DataDir + "/pr.nc", mode="w") as dset:
 
     # dimensions
     dset.createDimension("time", size=t.size)
@@ -243,10 +241,9 @@ with Dataset(DataDir + "/gpp.nc", mode="w") as dset:
     S.IGBP_class    = site_igbp
     
     dset.title = "FluxNet Tower eddy covariance measurements TIER1"
-    #dset.institution = "FluxNet"
     dset.version = "2015"
     dset.institutions = "%s; %s; %s" % (instit1, instit2, instit3)
-    dset.source = "Gross Primary Production, from Daytime partitioning method, reference selected from GPP versions using model efficiency (MEF). The MEF analysis is repeated for each time aggregation"
+    dset.source = "Precipitation consolidated from P and P_ERA"
     dset.history = """
 %s: downloaded source from %s;
 %s: converted to netCDF with %s""" % (stamp1, remote_source, stamp2, gist_source)

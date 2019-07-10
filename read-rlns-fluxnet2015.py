@@ -15,14 +15,16 @@ DataDir = "/Users/mingquan/newDATA"
 start_yr = 1991
 end_yr   = 2014
 
-VarID       = "gpp"
-RawVarID    = "GPP_DT_VUT_REF"
-RawVarID_QC = RawVarID + "_QC"
-long_name   = "gross primary production"
+VarID       = "rlns"
+RawVar1ID   = "LW_IN_F"
+RawVar2ID   = "LW_OUT"
+RawVar1ID_QC= RawVar1ID + "_QC"
+RawVar2ID_QC= RawVar2ID + "_QC"
+long_name   = "surface net shortwave radiation"
 
 # Set general information for the data source
 remote_source = "https://fluxnet.fluxdata.org/data/fluxnet2015-dataset/"
-gist_source = "https://github.com/mmu2019/Datasets/blob/master/read-gpp-fluxnet2015.py"
+gist_source = "https://github.com/mmu2019/Datasets/blob/master/read-rlns-fluxnet2015.py"
 local_source = DataDir + '/FLUXNET2015/TIER1/FULLSET/MM/FLX_STATIONNAME_FLUXNET2015_FULLSET_MM_YEAR.csv'
 stamp1 = '2019-06-20'
 
@@ -37,10 +39,10 @@ instit3 = "LBA, NECC, ICOS, TCOS-Siberia, and USCCC"
 period = period = str(start_yr) + "-01 through " + str(end_yr) + "-12"
 origtr = "monthly"
 origsr = "site"
-origut = "gC/m2/d"
+origut = "W/m2"
 finltr = "monthly"
 finlsr = "site"
-finlut = "kgC/m2/s"
+finlut = "W/m2"
 
 # Create temporal dimension
 nyears = end_yr - start_yr + 1
@@ -138,9 +140,12 @@ for FileName in AllFileNames:
     ndata = len(datarec)
     datastr = datarec[0].split(',')
 
-    if RawVarID in datastr:
-       indx    = datastr.index(RawVarID)
-       #indx_qc = datastr.index(RawVarID_QC)
+    if RawVar1ID in datastr and RawVar2ID in datastr:
+       indx1    = datastr.index(RawVar1ID)
+       indx2    = datastr.index(RawVar2ID)
+       indx1_qc = datastr.index(RawVar1ID_QC)
+       indx2_qc = datastr.index(RawVar2ID_QC)
+       indx = 0
     else:
        indx = -1
 
@@ -153,23 +158,22 @@ for FileName in AllFileNames:
            YY = int(YYMM/100)
            MM = int(YYMM - YY*100)
 
-           tempdata    = float(datastr[indx])
-           #tempdata_qc = float(datastr[indx_qc])
+           tempdata1    = float(datastr[indx1])
+           tempdata2    = float(datastr[indx2])
+           tempdata1_qc = float(datastr[indx1_qc])
+           tempdata2_qc = float(datastr[indx2_qc])
 
-           #if tempdata<=-990 or tempdata_qc<0.5 and tempdata_qc>=0:
-           if tempdata<=-990:
+           if tempdata1<=-990 or tempdata2<=-990:
               # reset missing value
               tempdata = -999.
            else:
-              # convert unit from gC/m2/d --> KgC/m2/s for nee, gpp and reco
-              tempdata = tempdata/(1000.*3600*24.)
+              tempdata = tempdata1 - tempdata2
 
            # only data in the period from start_yr till end_yr are chosen.
            if YY>=start_yr and YY<=end_yr:
               iy = YY - start_yr
               im = MM - 1
               data2D[iy,im] = tempdata
-
 
     ijk = 0
     for iy in range(nyears):
@@ -187,7 +191,7 @@ data_max = data.max()
 # Calculate climatology of burned area
 mdata     = data.mean(axis=0)
 
-with Dataset(DataDir + "/gpp.nc", mode="w") as dset:
+with Dataset(DataDir + "/rlns.nc", mode="w") as dset:
 
     # dimensions
     dset.createDimension("time", size=t.size)
@@ -230,7 +234,7 @@ with Dataset(DataDir + "/gpp.nc", mode="w") as dset:
     # data
     D = dset.createVariable(VarID, data.dtype, ("time", "data"), fill_value = -999)
     D[...]          = data
-    D.units         = "kg/m2/s"
+    D.units         = "W/m2"
     D.standard_name = long_name
     D.long_name     = long_name
     D.actual_range  = np.asarray([data_min,data_max])
@@ -243,10 +247,9 @@ with Dataset(DataDir + "/gpp.nc", mode="w") as dset:
     S.IGBP_class    = site_igbp
     
     dset.title = "FluxNet Tower eddy covariance measurements TIER1"
-    #dset.institution = "FluxNet"
     dset.version = "2015"
     dset.institutions = "%s; %s; %s" % (instit1, instit2, instit3)
-    dset.source = "Gross Primary Production, from Daytime partitioning method, reference selected from GPP versions using model efficiency (MEF). The MEF analysis is repeated for each time aggregation"
+    dset.source = "Net longwave radiation obtained from LW_IN_F and LW_OUT"
     dset.history = """
 %s: downloaded source from %s;
 %s: converted to netCDF with %s""" % (stamp1, remote_source, stamp2, gist_source)

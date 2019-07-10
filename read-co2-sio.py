@@ -5,6 +5,9 @@ import os
 import time
 from urllib.request import urlretrieve
 
+# set up Data directory
+DataDir = "/Users/mingquan/newDATA"
+
 remote_source = "http://scrippsco2.ucsd.edu/assets/data/atmospheric/stations/in_situ_co2/monthly/monthly_in_situ_co2_mlo.csv"
 gist_source = "https://github.com/mmu2019/Datasets/blob/master/read-co2-sio.py"
 local_source = os.path.basename(remote_source)
@@ -36,11 +39,11 @@ lat = np.asarray([19.5]).astype(np.float32)
 lon = np.asarray([-155.6]).astype(np.float32)
 elevation = np.asarray([3397.]).astype(np.float32)
 
-start_yr  = year[0]
-end_yr    = year[t.size-1]
+start_yr  = int(year[0])
+end_yr    = int(year[t.size-1])
 
-start_mon = month[0]
-end_mon   = month[t.size-1]
+start_mon = int(month[0])
+end_mon   = int(month[t.size-1])
 
 print(start_yr)
 print(end_yr)
@@ -55,8 +58,11 @@ origut = "ppm"
 finltr = "monthly"
 finlsr = "site"
 finlut = "ppm"
+site_id   = "MLO"
+site_name = "Mauna Loa Observatory, Hawaii"
+site_igbp = "N/A"
 
-with Dataset("co2.nc", mode="w") as dset:
+with Dataset(DataDir + "/co2.nc", mode="w") as dset:
 
     # dimensions
     dset.createDimension("time", size=t.size)
@@ -101,6 +107,9 @@ with Dataset("co2.nc", mode="w") as dset:
     D.standard_name = "atmosphere_moles_of_carbon_dioxide"
     D.long_name = "CO2 concentration"
     D.actual_range = np.asarray([co2.min(),co2.max()])
+    D.site_id       = site_id
+    D.site_name     = site_name
+    D.IGBP_class    = site_igbp
     
     dset.title = "Primary Mauna Loa CO2 Record (1958 - present)"
     dset.version = "2017"

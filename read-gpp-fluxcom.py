@@ -11,7 +11,7 @@ from urllib.request import urlretrieve
 from scipy.interpolate import griddata
 
 # set up Data directory
-DataDir = "/Users/mingquan/projects"
+DataDir = "/Users/mingquan/newDATA"
 
 # Set general information for the data source
 remote_source = "https://doi.org/doi:10.17871/FLUXCOM_RS_METEO_CRUNCEPv6_1980_2013_v1"

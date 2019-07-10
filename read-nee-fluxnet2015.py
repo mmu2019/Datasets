@@ -8,18 +8,17 @@ import netCDF4 as nc
 import math
 from urllib.request import urlretrieve
 
+# set up Data directory
+DataDir = "/Users/mingquan/newDATA"
+
 # set up initial and final years of data
 start_yr = 1991
 end_yr   = 2014
-nyears = end_yr - start_yr
 
 VarID       = "nee"
 RawVarID    = "NEE_VUT_REF"
 RawVarID_QC = RawVarID + "_QC"
 long_name   = "net ecosystem exchange"
-
-# set up Data directory
-DataDir = "/Users/mingquan/projects"
 
 # Set general information for the data source
 remote_source = "https://fluxnet.fluxdata.org/data/fluxnet2015-dataset/"
@@ -44,8 +43,8 @@ finlsr = "site"
 finlut = "kgC/m2/s"
 
 # Create temporal dimension
-nyears    = 24
-nmonth    = 12
+nyears = end_yr - start_yr + 1
+nmonth = 12
 smonth = np.asarray(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'])
 month_bnd = np.asarray([0,31,59,90,120,151,181,212,243,273,304,334,365],dtype=float)
 tbnd  = np.asarray([((np.arange(nyears)*365)[:,np.newaxis]+month_bnd[:-1]).flatten(),
@@ -102,6 +101,7 @@ nfile = len(AllFileNames)
 lon    = np.ma.masked_array(np.random.rand(nfile))
 lat    = np.ma.masked_array(np.random.rand(nfile))
 lev    = np.ma.masked_array(np.random.rand(nfile))
+siteID = np.ma.masked_array(np.random.rand(nfile))
 data   = np.ma.masked_array(np.random.rand(t.size, nfile), fill_value=-999)
 data2D = np.ma.masked_array(np.random.rand(nyears,nmonth), fill_value=-999)
 
@@ -138,38 +138,44 @@ for FileName in AllFileNames:
     ndata = len(datarec)
     datastr = datarec[0].split(',')
 
-    indx    = datastr.index(RawVarID)
-    indx_qc = datastr.index(RawVarID_QC)
+    if RawVarID in datastr:
+       indx    = datastr.index(RawVarID)
+       indx_qc = datastr.index(RawVarID_QC)
+    else:
+       indx = -1
 
-    for i in range(ndata-1):
-        datastr = datarec[i+1].split(',')
+    if indx != -1:
+       for i in range(ndata-1):
+           datastr = datarec[i+1].split(',')
 
-        YYMM = int(datastr[0])
+           YYMM = int(datastr[0])
 
-        YY = int(YYMM/100)
-        MM = int(YYMM - YY*100)
+           YY = int(YYMM/100)
+           MM = int(YYMM - YY*100)
 
-        tempdata    = float(datastr[indx])
-        tempdata_qc = float(datastr[indx_qc])
+           tempdata    = float(datastr[indx])
+           tempdata_qc = float(datastr[indx_qc])
 
-        if tempdata<=-990 or tempdata_qc<0.5 and tempdata_qc>=0:
-           # reset missing value
-           tempdata = -999.
-        else:
-           # convert unit from gC/m2/d --> KgC/m2/s for nee, gpp and reco
-           tempdata = -tempdata/(1000.*3600*24.)
+           if tempdata<=-990 or tempdata_qc<0.5 and tempdata_qc>=0:
+              # reset missing value
+              tempdata = -999.
+           else:
+              # convert unit from gC/m2/d --> KgC/m2/s for nee, gpp and reco
+              tempdata = -tempdata/(1000.*3600*24.)
 
-        # only data in the period from start_yr till end_yr are chosen.
-        if YY>=start_yr and YY<=end_yr:
-           iy = YY - start_yr
-           im = MM - 1
-           data2D[iy,im] = tempdata
+           # only data in the period from start_yr till end_yr are chosen.
+           if YY>=start_yr and YY<=end_yr:
+              iy = YY - start_yr
+              im = MM - 1
+              data2D[iy,im] = tempdata
 
     ijk = 0
     for iy in range(nyears):
         for im in range(nmonth):
             data[ijk,ij] = data2D[iy,im]
             ijk = ijk + 1
+
+    siteID[ij] = ij + 1
 
     ij = ij + 1
 
@@ -179,7 +185,7 @@ data_max = data.max()
 # Calculate climatology of burned area
 mdata     = data.mean(axis=0)
 
-with Dataset("nee.nc", mode="w") as dset:
+with Dataset(DataDir + "/nee.nc", mode="w") as dset:
 
     # dimensions
     dset.createDimension("time", size=t.size)
@@ -220,21 +226,25 @@ with Dataset("nee.nc", mode="w") as dset:
     Z.positive      = "up"
     
     # data
-    D = dset.createVariable("nee", data.dtype, ("time", "data"), fill_value = -999)
+    D = dset.createVariable(VarID, data.dtype, ("time", "data"), fill_value = -999)
     D[...]          = data
     D.units         = "kg/m2/s"
     D.standard_name = long_name
     D.long_name     = long_name
     D.actual_range  = np.asarray([data_min,data_max])
-    D.site_id       = site_id
-    D.site_name     = site_name
-    D.IGBP_class    = site_igbp
+
+    # site_info
+    S = dset.createVariable("site_info", int, ("data"))
+    S[...]          = siteID
+    S.site_id       = site_id
+    S.site_name     = site_name
+    S.IGBP_class    = site_igbp
     
-    dset.title = "Net Ecosystem Exchange, using Variable Ustar Threshold (VUT) for each year, reference selected on the basis of the model efficiency (MEF). The MEF analysis is repeated for each time aggregation"
+    dset.title = "FluxNet Tower eddy covariance measurements TIER1"
     #dset.institution = "FluxNet"
     dset.version = "2015"
     dset.institutions = "%s; %s; %s" % (instit1, instit2, instit3)
-    dset.source = "FluxNet Tower eddy covariance measurements TIER1"
+    dset.source = "Net Ecosystem Exchange, using Variable Ustar Threshold (VUT) for each year, reference selected on the basis of the model efficiency (MEF). The MEF analysis is repeated for each time aggregation"
     dset.history = """
 %s: downloaded source from %s;
 %s: converted to netCDF with %s""" % (stamp1, remote_source, stamp2, gist_source)
